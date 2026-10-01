@@ -1203,27 +1203,23 @@ table.fx-table tr:hover td {
 
 /* ===== Logo pulse popup ===== */
 .fx-loader {
+  display: none;
+  /* hidden by default on every device */
   height: 100vh;
   height: 100dvh;
-  /* accounts for mobile browser address bars */
   z-index: 2000;
-  /* above navbar (1030) and modals (1055) */
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(4px);
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity .25s ease, visibility .25s ease;
 }
 
 .fx-loader.is-active {
-  opacity: 1;
-  visibility: visible;
+  display: flex;
+  /* only shown when JS adds this class */
 }
 
 .fx-loader-logo {
   width: clamp(72px, 22vw, 140px);
-  /* 72px on small phones, up to 140px on desktop */
   height: auto;
   max-width: 50%;
   object-fit: contain;
@@ -1242,11 +1238,26 @@ table.fx-table tr:hover td {
     transform: scale(1.12);
     opacity: 1;
   }
+
 }
 
 /* Respect users who turn off motion */
 @media (prefers-reduced-motion: reduce) {
   .fx-loader-logo {
     animation: none;
+  }
+
+  @keyframes fxPulse {
+
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: .85;
+    }
+
+    50% {
+      transform: scale(1.12);
+      opacity: 1;
+    }
   }
 }
