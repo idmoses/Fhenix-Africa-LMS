@@ -4,11 +4,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
 :root{
-  --fx-navy:#0F2A44;
-  --fx-navy-soft:#173A5E;
-  --fx-blue:#1B4F8C;
+  --fx-navy:#006CC0;
+  --fx-navy-soft:#006CC0;
+  --fx-blue:#006CC0;
   --fx-blue-light:#EAF1FA;
-  --fx-orange:#E8792B;
+  --fx-orange:#FC6400;
   --fx-orange-light:#FDEEE1;
   --fx-green:#2E9E6D;
   --fx-green-light:#E7F6EF;
@@ -53,8 +53,8 @@ p{color:var(--fx-muted);}
 }
 .btn-fx-primary{background:var(--fx-blue);color:#fff;}
 .btn-fx-primary:hover{background:var(--fx-navy);color:#fff;}
-.btn-fx-orange{background:var(--fx-orange);color:#fff;}
-.btn-fx-orange:hover{background:#cf661b;color:#fff;}
+.btn-fx-orange{background:var(--fx-orange);color:#fff; font-weight:600;}
+.btn-fx-orange:hover{background:#FC6400;color:#fff;}
 .btn-fx-outline{background:transparent;border-color:var(--fx-line);color:var(--fx-navy);}
 .btn-fx-outline:hover{border-color:var(--fx-blue);color:var(--fx-blue);}
 .btn-fx-ghost{background:transparent;color:var(--fx-muted);padding:.5rem .8rem;}
@@ -250,3 +250,60 @@ table.fx-table tr:hover td{background:#FAFCFE;}
 .gap-12{gap:12px;}
 .flex-between{display:flex;align-items:center;justify-content:space-between;}
 .mb-0{margin-bottom:0;}
+
+.fx-logo {
+  display: inline-flex;
+  align-items: center;
+}
+
+.fx-logo-img {
+  height: 60px;   /* adjust: 28px for smaller, 40px for larger */
+  width: auto;    /* keeps the aspect ratio */
+  display: block;
+}
+
+/* Slightly smaller on mobile */
+@media (max-width: 576px) {
+  .fx-logo-img {
+    height: 26px;
+  }
+}
+
+
+
+.fx-logo { display: inline-flex; align-items: center; }
+.fx-logo-img { height: 44px; width: auto; display: block; }
+@media (max-width: 576px) { .fx-logo-img { height: 36px; } }
+ 
+/* ===== Logo pulse popup ===== */
+.fx-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, .9);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .2s ease, visibility .2s ease;
+}
+.fx-loader.show { opacity: 1; visibility: visible; }
+ 
+.fx-loader-logo {
+  width: 110px;
+  height: 110px;
+  object-fit: contain;
+  transform: scale(.6);
+  opacity: 0;
+}
+.fx-loader.show .fx-loader-logo {
+  animation: fxPop .35s ease-out forwards, fxPulse 1.2s ease-in-out .35s infinite;
+}
+ 
+@keyframes fxPop   { to { transform: scale(1); opacity: 1; } }
+@keyframes fxPulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.15); }
+}
+ 
