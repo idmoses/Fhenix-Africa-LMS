@@ -1239,22 +1239,4 @@ table.fx-table tr:hover td {
     opacity: 1;
   }
 
-}
-
-/* Respect users who turn off motion */
-@media (prefers-reduced-motion: reduce) {
-
-  @keyframes fxPulse {
-
-    0%,
-    100% {
-      transform: scale(1);
-      opacity: .85;
-    }
-
-    50% {
-      transform: scale(1.12);
-      opacity: 1;
-    }
-  }
-}
+};
