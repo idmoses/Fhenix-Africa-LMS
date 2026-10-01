@@ -199,9 +199,13 @@
 
     // ---------- Pulse helpers ----------
     const loader = document.getElementById('fxLoader');
-    function showLoader() { loader.classList.add('show'); loader.setAttribute('aria-hidden', 'false'); }
-    function hideLoader() { loader.classList.remove('show'); loader.setAttribute('aria-hidden', 'true'); }
+    // show
+    loader.classList.add('is-active');
+    loader.setAttribute('aria-hidden', 'false');
 
+    // hide
+    loader.classList.remove('is-active');
+    loader.setAttribute('aria-hidden', 'true');
     // ---------- Submit ----------
     document.getElementById('fxRegisterForm').addEventListener('submit', function (e) {
       e.preventDefault();
