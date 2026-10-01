@@ -18,7 +18,7 @@
 <body>
   <!-- Logo pulse (pops up only when the form is submitted) -->
   <div id="fxLoader" class="fx-loader position-fixed top-0 start-0 w-100 align-items-center justify-content-center"
-    role="status" aria-live="polite" aria-hidden="true">
+    style="display:none" role="status" aria-live="polite" aria-hidden="true">
     <img src="assets/img/F-Logo-removebg-preview.png" alt="" class="fx-loader-logo img-fluid">
     <span class="visually-hidden">Loading...</span>
   </div>
@@ -178,133 +178,133 @@
   <script src="assets/js/data.js"></script>
   <script src="assets/js/auth.js"></script>
   <script src="assets/js/app.js"></script>
-  
- <script>
 
-  /* =========================================================
-   Fhenix Africa - Trainee registration page
-   Needs to load AFTER the scripts that define:
-   FxData, FxAuth, fxCurrency, fxValidateRequired, fxToast
-   ========================================================= */
-(function () {
-  'use strict';
+  <script>
 
-  // ---------- Elements ----------
-  const trackSelect = document.getElementById('fxTrackSelect');
-  const durationInput = document.getElementById('fxTrackDuration');
-  const form = document.getElementById('fxRegisterForm');
-  const msg = document.getElementById('fxRegMsg');
-  const loader = document.getElementById('fxLoader');
+    /* =========================================================
+     Fhenix Africa - Trainee registration page
+     Needs to load AFTER the scripts that define:
+     FxData, FxAuth, fxCurrency, fxValidateRequired, fxToast
+     ========================================================= */
+    (function () {
+      'use strict';
 
-  // ---------- Pulse loader helpers ----------
-  // Uses "is-active" to match the CSS: .fx-loader { display:none } .fx-loader.is-active { display:flex }
-  function showLoader() {
-    if (!loader) return;
-    loader.classList.add('is-active');
-    loader.setAttribute('aria-hidden', 'false');
-  }
+      // ---------- Elements ----------
+      const trackSelect = document.getElementById('fxTrackSelect');
+      const durationInput = document.getElementById('fxTrackDuration');
+      const form = document.getElementById('fxRegisterForm');
+      const msg = document.getElementById('fxRegMsg');
+      const loader = document.getElementById('fxLoader');
 
-  function hideLoader() {
-    if (!loader) return;
-    loader.classList.remove('is-active');
-    loader.setAttribute('aria-hidden', 'true');
-  }
-
-  // Always start hidden, and hide again if a mobile browser restores
-  // the page from cache (Back button) with the loader still showing.
-  hideLoader();
-  window.addEventListener('pageshow', hideLoader);
-
-  // ---------- Track select ----------
-  if (trackSelect) {
-    const tracks = FxData.tracks();
-
-    trackSelect.innerHTML =
-      '<option value="">Select a training track</option>' +
-      tracks
-        .map(
-          (t) =>
-            `<option value="${t.id}" data-duration="${t.duration}">${t.name} — ${fxCurrency(t.fee)}</option>`
-        )
-        .join('');
-
-    const params = new URLSearchParams(window.location.search);
-    const preselect = params.get('track');
-    if (preselect) trackSelect.value = preselect;
-
-    const syncDuration = function () {
-      const opt = trackSelect.selectedOptions[0];
-      if (durationInput) durationInput.value = opt ? opt.dataset.duration || '' : '';
-    };
-
-    trackSelect.addEventListener('change', syncDuration);
-    syncDuration();
-  }
-
-  // ---------- Submit ----------
-  if (form) {
-    let submitting = false;
-
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      if (submitting) return;
-
-      const btn = form.querySelector('button[type="submit"]');
-      if (msg) msg.innerHTML = '';
-
-      // Validate first. The loader stays hidden if anything fails.
-      if (!fxValidateRequired(form)) {
-        fxToast('Please fill in all required fields.', 'error');
-        return;
+      // ---------- Pulse loader helpers ----------
+      // Uses "is-active" to match the CSS: .fx-loader { display:none } .fx-loader.is-active { display:flex }
+      function showLoader() {
+        if (!loader) return;
+        loader.style.display = 'flex';
+        loader.setAttribute('aria-hidden', 'false');
       }
 
-      const data = Object.fromEntries(new FormData(form).entries());
-
-      if (data.password !== data.confirmPassword) {
-        fxToast('Passwords do not match.', 'error');
-        return;
+      function hideLoader() {
+        if (!loader) return;
+        loader.style.display = 'none';
+        loader.setAttribute('aria-hidden', 'true');
       }
 
-      // Only now does the pulse appear, and the button locks to stop double submits
-      submitting = true;
-      if (btn) btn.disabled = true;
-      showLoader();
+      // Always start hidden, and hide again if a mobile browser restores
+      // the page from cache (Back button) with the loader still showing.
+      hideLoader();
+      window.addEventListener('pageshow', hideLoader);
 
-      // Short delay so the pulse is visible (registration is instant locally)
-      setTimeout(function () {
-        let result;
+      // ---------- Track select ----------
+      if (trackSelect) {
+        const tracks = FxData.tracks();
 
-        try {
-          result = FxAuth.registerTrainee(data);
-        } catch (err) {
-          result = { ok: false, error: 'Something went wrong. Please try again.' };
-        }
+        trackSelect.innerHTML =
+          '<option value="">Select a training track</option>' +
+          tracks
+            .map(
+              (t) =>
+                `<option value="${t.id}" data-duration="${t.duration}">${t.name} — ${fxCurrency(t.fee)}</option>`
+            )
+            .join('');
 
-        if (!result || !result.ok) {
-          hideLoader();
-          submitting = false;
-          if (btn) btn.disabled = false;
-          fxToast((result && result.error) || 'Registration failed.', 'error');
-          return;
-        }
+        const params = new URLSearchParams(window.location.search);
+        const preselect = params.get('track');
+        if (preselect) trackSelect.value = preselect;
 
-        if (msg) {
-          msg.innerHTML = `<div class="fx-card alert mb-4" style="border-color:var(--fx-green);background:var(--fx-green-light);">
+        const syncDuration = function () {
+          const opt = trackSelect.selectedOptions[0];
+          if (durationInput) durationInput.value = opt ? opt.dataset.duration || '' : '';
+        };
+
+        trackSelect.addEventListener('change', syncDuration);
+        syncDuration();
+      }
+
+      // ---------- Submit ----------
+      if (form) {
+        let submitting = false;
+
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          if (submitting) return;
+
+          const btn = form.querySelector('button[type="submit"]');
+          if (msg) msg.innerHTML = '';
+
+          // Validate first. The loader stays hidden if anything fails.
+          if (!fxValidateRequired(form)) {
+            fxToast('Please fill in all required fields.', 'error');
+            return;
+          }
+
+          const data = Object.fromEntries(new FormData(form).entries());
+
+          if (data.password !== data.confirmPassword) {
+            fxToast('Passwords do not match.', 'error');
+            return;
+          }
+
+          // Only now does the pulse appear, and the button locks to stop double submits
+          submitting = true;
+          if (btn) btn.disabled = true;
+          showLoader();
+
+          // Short delay so the pulse is visible (registration is instant locally)
+          setTimeout(function () {
+            let result;
+
+            try {
+              result = FxAuth.registerTrainee(data);
+            } catch (err) {
+              result = { ok: false, error: 'Something went wrong. Please try again.' };
+            }
+
+            if (!result || !result.ok) {
+              hideLoader();
+              submitting = false;
+              if (btn) btn.disabled = false;
+              fxToast((result && result.error) || 'Registration failed.', 'error');
+              return;
+            }
+
+            if (msg) {
+              msg.innerHTML = `<div class="fx-card alert mb-4" style="border-color:var(--fx-green);background:var(--fx-green-light);">
             <strong>Registration successful!</strong> Your Trainee ID is <strong>${result.traineeId}</strong>. Redirecting you to sign in…
           </div>`;
-        }
+            }
 
-        // Hide the pulse so the success message is visible during the redirect wait
-        hideLoader();
+            // Hide the pulse so the success message is visible during the redirect wait
+            hideLoader();
 
-        setTimeout(function () {
-          window.location.href = 'login.html';
-        }, 3600);
-      }, 3000);
-    });
-  }
-})();
- </script>
+            setTimeout(function () {
+              window.location.href = 'login.html';
+            }, 3600);
+          }, 3000);
+        });
+      }
+    })();
+  </script>
 </body>
 
 </html>
