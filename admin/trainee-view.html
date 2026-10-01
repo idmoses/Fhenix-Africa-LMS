@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trainee Profile — Fhenix Africa Admin</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="fx-app">
+  <aside class="fx-sidebar" id="fxSidebar"></aside>
+  <div class="fx-overlay" id="fxOverlay"></div>
+  <div class="fx-main">
+    <div class="fx-topbar">
+      <div class="d-flex gap-12" style="align-items:center;">
+        <button class="fx-burger" id="fxBurger"><i class="bi bi-list"></i></button>
+        <span class="page-title" id="fxPageTitle"></span>
+      </div>
+    </div>
+    <div class="fx-content" id="fxViewWrap"></div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  FxAuth.guardAdmin();
+  fxRenderShell({ role: 'admin', active: 'trainees.html', title: 'Trainee Profile' });
+
+  const id = new URLSearchParams(location.search).get('id');
+  const wrap = document.getElementById('fxViewWrap');
+  let t = FxData.trainee(id);
+
+  if (!t) {
+    wrap.innerHTML = `<div class="fx-empty fx-card"><div class="icon"><i class="bi bi-person-x"></i></div>Trainee not found. <a href="trainees.html">Back to Trainees</a></div>`;
+  } else {
+    render();
+  }
+
+  function render() {
+    t = FxData.trainee(id);
+    const track = FxData.track(t.track);
+    const receipts = FxData.receiptsForTrainee(t.traineeId);
+    wrap.innerHTML = `
+      <a href="trainees.html" class="text-muted-fx"><i class="bi bi-arrow-left"></i> Back to Trainees</a>
+      <div class="flex-between" style="margin:14px 0 22px;flex-wrap:wrap;gap:12px;">
+        <div class="d-flex gap-12" style="align-items:center;">
+          <div class="fx-user-avatar" style="width:52px;height:52px;font-size:1.1rem;">${fxInitials(t.firstName, t.lastName)}</div>
+          <div><h3 class="mt-0 mb-0">${t.firstName} ${t.lastName}</h3><div class="text-muted-fx">${t.traineeId} · ${track ? track.name : t.track}</div></div>
+        </div>
+        <div class="d-flex gap-8">
+          <span class="fx-badge ${fxStatusBadgeClass(t.status)}">${t.status}</span>
+          <span class="fx-badge ${fxPaymentBadgeClass(t.payment.status)}">${t.payment.status}</span>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="fx-card">
+          <h4 class="mt-0">Personal Information</h4>
+          <p class="mb-0"><strong>Email:</strong> ${t.email}<br><strong>Phone:</strong> ${t.phone}<br><strong>Gender:</strong> ${t.gender}<br>
+          <strong>Date of Birth:</strong> ${fxDate(t.dob)}<br><strong>Address:</strong> ${t.address}</p>
+        </div>
+        <div class="fx-card">
+          <h4 class="mt-0">Guardian Information</h4>
+          <p class="mb-0"><strong>Name:</strong> ${t.guardian.name}<br><strong>Phone:</strong> ${t.guardian.phone}<br>
+          <strong>Email:</strong> ${t.guardian.email || '\u2014'}<br><strong>Relationship:</strong> ${t.guardian.relationship}<br>
+          <strong>Address:</strong> ${t.guardian.address}</p>
+        </div>
+        <div class="fx-card">
+          <h4 class="mt-0">Training Information</h4>
+          <p class="mb-0"><strong>Track:</strong> ${track ? track.name : t.track}<br><strong>Start:</strong> ${fxDate(t.startDate)}<br>
+          <strong>End:</strong> ${fxDate(t.endDate)}<br><strong>Status:</strong>
+          <select class="form-control" id="fxStatusSelect" style="display:inline-block;width:auto;margin-top:6px;">
+            <option ${t.status === 'Active' ? 'selected' : ''}>Active</option>
+            <option ${t.status === 'Completed' ? 'selected' : ''}>Completed</option>
+            <option ${t.status === 'Suspended' ? 'selected' : ''}>Suspended</option>
+          </select></p>
+        </div>
+        <div class="fx-card">
+          <h4 class="mt-0">Payment Information</h4>
+          <p class="mb-0"><strong>Fee:</strong> ${fxCurrency(t.payment.totalFee)}<br><strong>Paid:</strong> ${fxCurrency(t.payment.amountPaid)}<br>
+          <strong>Balance:</strong> ${fxCurrency(t.payment.balance)}<br><strong>Next Payment:</strong> ${t.payment.status === 'Fully Paid' ? 'None' : fxCurrency(t.payment.nextPayment) + ' due ' + fxDate(t.payment.nextPaymentDate)}</p>
+        </div>
+      </div>
+
+      <div class="fx-card" style="margin-top:20px;">
+        <h4 class="mt-0">Progress</h4>
+        <div class="fx-progress" style="margin-bottom:8px;"><span style="width:${t.progress.percentage}%"></span></div>
+        <p class="mb-0">${t.progress.completedLessons} of ${t.progress.totalLessons} lessons completed — ${t.progress.percentage}%</p>
+      </div>
+
+      <div class="fx-card" style="margin-top:20px;">
+        <h4 class="mt-0">Uploaded Receipts</h4>
+        ${receipts.length ? `<div class="fx-table-wrap"><table class="fx-table"><thead><tr><th>Reference</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead><tbody>
+          ${receipts.map(r => `<tr><td>${r.reference}</td><td>${fxCurrency(r.amount)}</td><td>${fxDate(r.date)}</td><td><span class="fx-badge ${fxReceiptBadgeClass(r.status)}">${r.status}</span></td></tr>`).join('')}
+        </tbody></table></div>` : `<div class="fx-empty"><div class="icon"><i class="bi bi-receipt"></i></div>No receipts uploaded yet.</div>`}
+      </div>
+
+      <div class="fx-card" style="margin-top:20px;">
+        <div class="flex-between">
+          <h4 class="mt-0">Certificate</h4>
+          ${t.certificate.available ? `<span class="fx-badge badge-green">Issued — ${t.certificate.certificateId}</span>` : `<button class="btn-fx-orange" id="fxIssueCertBtn" ${t.progress.percentage < 100 ? 'disabled style="opacity:.5;cursor:not-allowed;"' : ''}>Upload Certificate</button>`}
+        </div>
+        <p class="mb-0 text-muted-fx">${t.progress.percentage < 100 && !t.certificate.available ? 'Certificate upload unlocks once the trainee reaches 100% completion.' : ''}</p>
+      </div>
+
+      <div style="margin-top:20px;"><button class="btn-fx-primary" id="fxSaveStatus">Save Changes</button></div>
+    `;
+
+    document.getElementById('fxSaveStatus').addEventListener('click', () => {
+      FxData.updateTrainee(t.traineeId, { status: document.getElementById('fxStatusSelect').value });
+      fxToast('Trainee record updated.', 'success');
+      render();
+    });
+    const issueBtn = document.getElementById('fxIssueCertBtn');
+    if (issueBtn) issueBtn.addEventListener('click', () => {
+      const certId = 'FA-CERT-' + t.traineeId.split('-').pop();
+      FxData.updateTrainee(t.traineeId, { certificate: { available: true, file: 'certificate.pdf', certificateId: certId } });
+      fxToast('Certificate issued to trainee.', 'success');
+      render();
+    });
+  }
+</script>
+</body>
+</html>

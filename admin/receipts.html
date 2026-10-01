@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Payment Receipts — Fhenix Africa Admin</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="fx-app">
+  <aside class="fx-sidebar" id="fxSidebar"></aside>
+  <div class="fx-overlay" id="fxOverlay"></div>
+  <div class="fx-main">
+    <div class="fx-topbar">
+      <div class="d-flex gap-12" style="align-items:center;">
+        <button class="fx-burger" id="fxBurger"><i class="bi bi-list"></i></button>
+        <span class="page-title" id="fxPageTitle"></span>
+      </div>
+    </div>
+    <div class="fx-content">
+      <div class="fx-table-wrap">
+        <div class="fx-table-toolbar">
+          <strong>All Payment Receipts</strong>
+          <div class="filters"><select class="form-control" id="fxStatusFilter"><option value="">All Status</option><option>Pending</option><option>Verified</option><option>Rejected</option></select></div>
+        </div>
+        <table class="fx-table">
+          <thead><tr><th>Trainee</th><th>Trainee ID</th><th>Track</th><th>Amount</th><th>Payment Date</th><th>Receipt</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="fxReceiptRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  FxAuth.guardAdmin();
+  fxRenderShell({ role: 'admin', active: 'receipts.html', title: 'Payment Receipts' });
+
+  function render() {
+    const filter = document.getElementById('fxStatusFilter').value;
+    let receipts = FxData.receipts().slice().sort((a, b) => new Date(b.date) - new Date(a.date));
+    if (filter) receipts = receipts.filter(r => r.status === filter);
+
+    document.getElementById('fxReceiptRows').innerHTML = receipts.length ? receipts.map(r => {
+      const tr = FxData.trainee(r.traineeId);
+      const track = tr ? FxData.track(tr.track) : null;
+      return `<tr>
+        <td>${tr ? tr.firstName + ' ' + tr.lastName : '\u2014'}</td>
+        <td>${r.traineeId}</td>
+        <td>${track ? track.name : '\u2014'}</td>
+        <td>${fxCurrency(r.amount)}</td>
+        <td>${fxDate(r.date)}</td>
+        <td><i class="bi bi-file-earmark-text"></i> ${r.fileName}</td>
+        <td><span class="fx-badge ${fxReceiptBadgeClass(r.status)}">${r.status}</span></td>
+        <td>
+          ${r.status === 'Pending' ?
+            `<button class="btn-fx-outline" style="padding:.35rem .7rem;font-size:.8rem;" onclick="fxVerify('${r.id}')">Verify</button>
+             <button class="btn-fx-ghost" style="padding:.35rem .5rem;font-size:.8rem;" onclick="fxReject('${r.id}')">Reject</button>`
+            : `<span class="text-muted-fx" style="font-size:.82rem;">No action needed</span>`}
+        </td>
+      </tr>`;
+    }).join('') : `<tr><td colspan="8"><div class="fx-empty"><div class="icon"><i class="bi bi-inbox"></i></div>No receipts found.</div></td></tr>`;
+  }
+
+  function fxVerify(id) {
+    const receipts = FxData.receipts();
+    const r = receipts.find(x => x.id === id);
+    r.status = 'Verified';
+    FxData.saveReceipts(receipts);
+
+    const tr = FxData.trainee(r.traineeId);
+    if (tr) {
+      const amountPaid = tr.payment.amountPaid + r.amount;
+      const balance = Math.max(tr.payment.totalFee - amountPaid, 0);
+      const status = balance <= 0 ? 'Fully Paid' : (amountPaid > 0 ? 'Partially Paid' : 'Payment Due');
+      FxData.updateTrainee(tr.traineeId, {
+        payment: { ...tr.payment, amountPaid, balance, status, nextPayment: balance, nextPaymentDate: balance > 0 ? tr.payment.nextPaymentDate : '' }
+      });
+    }
+    fxToast('Receipt verified and trainee balance updated.', 'success');
+    render();
+  }
+  function fxReject(id) {
+    const receipts = FxData.receipts();
+    const r = receipts.find(x => x.id === id);
+    r.status = 'Rejected';
+    FxData.saveReceipts(receipts);
+    fxToast('Receipt rejected.', 'warn');
+    render();
+  }
+
+  document.getElementById('fxStatusFilter').addEventListener('change', render);
+  render();
+</script>
+</body>
+</html>

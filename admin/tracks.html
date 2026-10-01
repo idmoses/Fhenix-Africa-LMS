@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Training Tracks — Fhenix Africa Admin</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="fx-app">
+  <aside class="fx-sidebar" id="fxSidebar"></aside>
+  <div class="fx-overlay" id="fxOverlay"></div>
+  <div class="fx-main">
+    <div class="fx-topbar">
+      <div class="d-flex gap-12" style="align-items:center;">
+        <button class="fx-burger" id="fxBurger"><i class="bi bi-list"></i></button>
+        <span class="page-title" id="fxPageTitle"></span>
+      </div>
+    </div>
+    <div class="fx-content">
+      <div class="flex-between" style="margin-bottom:18px;">
+        <p class="mb-0 text-muted-fx">Manage the training tracks trainees can register for.</p>
+        <button class="btn-fx-orange" onclick="fxOpenAdd()"><i class="bi bi-plus-lg"></i> Add Training Track</button>
+      </div>
+      <div class="fx-track-grid" id="fxTrackGrid"></div>
+    </div>
+  </div>
+</div>
+
+<div class="fx-modal-backdrop" id="fxTrackModal">
+  <div class="fx-modal">
+    <div class="fx-modal-head"><strong id="fxTrackModalTitle">Add Training Track</strong><button class="fx-modal-close" onclick="fxCloseModal('fxTrackModal')">&times;</button></div>
+    <div class="fx-modal-body">
+      <form id="fxTrackForm" novalidate>
+        <input type="hidden" name="id">
+        <div class="form-group"><label class="form-label">Track Name</label><input class="form-control" name="name" required></div>
+        <div class="fx-form-grid">
+          <div class="form-group"><label class="form-label">Duration</label><input class="form-control" name="duration" placeholder="e.g. 3 Months" required></div>
+          <div class="form-group"><label class="form-label">Fee (₦)</label><input type="number" class="form-control" name="fee" required></div>
+        </div>
+        <div class="form-group"><label class="form-label">Skill Level</label>
+          <select class="form-control" name="level"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" name="desc" rows="3" required></textarea></div>
+        <button type="submit" class="btn-fx-orange" style="width:100%;padding:.7rem;">Save Track</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  FxAuth.guardAdmin();
+  fxRenderShell({ role: 'admin', active: 'tracks.html', title: 'Training Tracks' });
+
+  function render() {
+    const tracks = FxData.tracks();
+    document.getElementById('fxTrackGrid').innerHTML = tracks.map(t => `
+      <div class="fx-track-card">
+        <div class="fx-track-icon"><i class="bi ${t.icon || 'bi-mortarboard'}"></i></div>
+        <h4>${t.name}</h4><p>${t.desc}</p>
+        <div class="fx-track-meta"><span><i class="bi bi-clock"></i> ${t.duration}</span><span><i class="bi bi-bar-chart"></i> ${t.level}</span></div>
+        <div class="text-muted-fx" style="margin-bottom:14px;font-weight:600;">${fxCurrency(t.fee)}</div>
+        <div class="fx-track-actions">
+          <button class="btn-fx-outline" onclick='fxEdit(${JSON.stringify(t)})'>Edit</button>
+          <button class="btn-fx-ghost" onclick="fxDelete('${t.id}')">Delete</button>
+        </div>
+      </div>`).join('');
+  }
+
+  function fxOpenAdd() {
+    document.getElementById('fxTrackModalTitle').textContent = 'Add Training Track';
+    document.getElementById('fxTrackForm').reset();
+    document.getElementById('fxTrackForm').id.value = '';
+    fxOpenModal('fxTrackModal');
+  }
+  function fxEdit(t) {
+    document.getElementById('fxTrackModalTitle').textContent = 'Edit Training Track';
+    const form = document.getElementById('fxTrackForm');
+    form.id.value = t.id; form.name.value = t.name; form.duration.value = t.duration;
+    form.fee.value = t.fee; form.level.value = t.level; form.desc.value = t.desc;
+    fxOpenModal('fxTrackModal');
+  }
+  function fxDelete(id) {
+    let tracks = FxData.tracks();
+    tracks = tracks.filter(t => t.id !== id);
+    fxSet(FX_KEYS.TRACKS, tracks);
+    fxToast('Training track deleted.', 'warn');
+    render();
+  }
+
+  document.getElementById('fxTrackForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!fxValidateRequired(this)) { fxToast('Please fill in all required fields.', 'error'); return; }
+    const data = Object.fromEntries(new FormData(this).entries());
+    let tracks = FxData.tracks();
+    if (data.id) {
+      tracks = tracks.map(t => t.id === data.id ? { ...t, name: data.name, duration: data.duration, fee: Number(data.fee), level: data.level, desc: data.desc } : t);
+      fxToast('Training track updated.', 'success');
+    } else {
+      const id = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 24) + '-' + Date.now().toString().slice(-4);
+      tracks.push({ id, name: data.name, duration: data.duration, fee: Number(data.fee), level: data.level, desc: data.desc, icon: 'bi-mortarboard' });
+      fxToast('Training track added.', 'success');
+    }
+    fxSet(FX_KEYS.TRACKS, tracks);
+    fxCloseModal('fxTrackModal');
+    render();
+  });
+
+  render();
+</script>
+</body>
+</html>

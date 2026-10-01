@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Training Signup — Fhenix Africa</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<nav class="fx-navbar">
+  <div class="container-fx">
+    <a href="index.html" class="fx-logo"><span class="mark">FA</span> Fhenix Africa</a>
+    <div class="fx-nav-links"><a href="login.html">Already have an account? Sign In</a></div>
+  </div>
+</nav>
+
+<div class="container-fx" style="padding:40px 24px 70px;">
+  <div style="max-width:760px;margin:0 auto;">
+    <h1>Create your trainee account</h1>
+    <p class="text-muted-fx">Fill in your details below. Your training track, lessons and dashboard are set up automatically once you register.</p>
+
+    <div id="fxRegMsg"></div>
+
+    <form id="fxRegisterForm" novalidate>
+      <fieldset class="fx-fieldset">
+        <legend>Personal Information</legend>
+        <div class="fx-form-grid">
+          <div class="form-group"><label class="form-label">First Name</label><input class="form-control" name="firstName" required></div>
+          <div class="form-group"><label class="form-label">Last Name</label><input class="form-control" name="lastName" required></div>
+          <div class="form-group"><label class="form-label">Email Address</label><input type="email" class="form-control" name="email" required></div>
+          <div class="form-group"><label class="form-label">Phone Number</label><input class="form-control" name="phone" required></div>
+          <div class="form-group"><label class="form-label">Date of Birth</label><input type="date" class="form-control" name="dob" required></div>
+          <div class="form-group"><label class="form-label">Gender</label>
+            <select class="form-control" name="gender" required>
+              <option value="">Select gender</option><option>Female</option><option>Male</option><option>Prefer not to say</option>
+            </select>
+          </div>
+          <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Profile Picture</label><input type="file" class="form-control" name="profilePicture" accept="image/*"></div>
+          <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Residential Address</label><input class="form-control" name="address" required></div>
+        </div>
+      </fieldset>
+
+      <fieldset class="fx-fieldset">
+        <legend>Training Information</legend>
+        <div class="fx-form-grid">
+          <div class="form-group"><label class="form-label">Training Track</label>
+            <select class="form-control" name="track" id="fxTrackSelect" required></select>
+          </div>
+          <div class="form-group"><label class="form-label">Training Level</label>
+            <select class="form-control" name="level" required>
+              <option value="">Select level</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Training Start Date</label><input type="date" class="form-control" name="startDate" required></div>
+          <div class="form-group"><label class="form-label">Training Duration</label><input class="form-control" name="duration" id="fxTrackDuration" readonly></div>
+        </div>
+      </fieldset>
+
+      <fieldset class="fx-fieldset">
+        <legend>Parent / Guardian Information</legend>
+        <div class="fx-form-grid">
+          <div class="form-group"><label class="form-label">Guardian Name</label><input class="form-control" name="guardianName" required></div>
+          <div class="form-group"><label class="form-label">Guardian Phone Number</label><input class="form-control" name="guardianPhone" required></div>
+          <div class="form-group"><label class="form-label">Guardian Email</label><input type="email" class="form-control" name="guardianEmail"></div>
+          <div class="form-group"><label class="form-label">Relationship to Trainee</label><input class="form-control" name="guardianRelationship" placeholder="e.g. Mother, Father" required></div>
+          <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Guardian Address</label><input class="form-control" name="guardianAddress" required></div>
+        </div>
+      </fieldset>
+
+      <fieldset class="fx-fieldset">
+        <legend>Account Information</legend>
+        <div class="fx-form-grid">
+          <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-control" name="password" minlength="6" required></div>
+          <div class="form-group"><label class="form-label">Confirm Password</label><input type="password" class="form-control" name="confirmPassword" minlength="6" required></div>
+        </div>
+        <p class="form-hint">Use at least 6 characters. Your password is stored only on this device for this demo.</p>
+      </fieldset>
+
+      <button type="submit" class="btn-fx-orange" style="width:100%;padding:.85rem;">Create Trainee Account</button>
+    </form>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+  const trackSelect = document.getElementById('fxTrackSelect');
+  const tracks = FxData.tracks();
+  trackSelect.innerHTML = '<option value="">Select a training track</option>' +
+    tracks.map(t => `<option value="${t.id}" data-duration="${t.duration}">${t.name} — ${fxCurrency(t.fee)}</option>`).join('');
+
+  const params = new URLSearchParams(window.location.search);
+  const preselect = params.get('track');
+  if (preselect) trackSelect.value = preselect;
+
+  function syncDuration() {
+    const opt = trackSelect.selectedOptions[0];
+    document.getElementById('fxTrackDuration').value = opt ? (opt.dataset.duration || '') : '';
+  }
+  trackSelect.addEventListener('change', syncDuration);
+  syncDuration();
+
+  document.getElementById('fxRegisterForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const form = e.target;
+    const msg = document.getElementById('fxRegMsg');
+    msg.innerHTML = '';
+    if (!fxValidateRequired(form)) { fxToast('Please fill in all required fields.', 'error'); return; }
+    const data = Object.fromEntries(new FormData(form).entries());
+    if (data.password !== data.confirmPassword) { fxToast('Passwords do not match.', 'error'); return; }
+
+    const result = FxAuth.registerTrainee(data);
+    if (!result.ok) { fxToast(result.error, 'error'); return; }
+
+    msg.innerHTML = `<div class="fx-card" style="border-color:var(--fx-green);background:var(--fx-green-light);margin-bottom:20px;">
+      <strong>Registration successful!</strong> Your Trainee ID is <strong>${result.traineeId}</strong>. Redirecting you to sign in…
+    </div>`;
+    setTimeout(() => window.location.href = 'login.html', 1600);
+  });
+</script>
+</body>
+</html>

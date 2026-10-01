@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Certificates — Fhenix Africa Admin</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="fx-app">
+  <aside class="fx-sidebar" id="fxSidebar"></aside>
+  <div class="fx-overlay" id="fxOverlay"></div>
+  <div class="fx-main">
+    <div class="fx-topbar">
+      <div class="d-flex gap-12" style="align-items:center;">
+        <button class="fx-burger" id="fxBurger"><i class="bi bi-list"></i></button>
+        <span class="page-title" id="fxPageTitle"></span>
+      </div>
+    </div>
+    <div class="fx-content">
+      <div class="fx-table-wrap">
+        <table class="fx-table">
+          <thead><tr><th>Trainee</th><th>Track</th><th>Completion</th><th>Certificate Status</th><th>Actions</th></tr></thead>
+          <tbody id="fxCertRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  FxAuth.guardAdmin();
+  fxRenderShell({ role: 'admin', active: 'certificates.html', title: 'Certificates' });
+
+  function render() {
+    const trainees = FxData.trainees();
+    document.getElementById('fxCertRows').innerHTML = trainees.map(t => {
+      const track = FxData.track(t.track);
+      const eligible = t.progress.percentage === 100;
+      return `<tr>
+        <td>${t.firstName} ${t.lastName}<div class="text-muted-fx" style="font-size:.78rem;">${t.traineeId}</div></td>
+        <td>${track ? track.name : t.track}</td>
+        <td>${t.progress.percentage}%</td>
+        <td>${t.certificate.available ? `<span class="fx-badge badge-green">Issued</span>` : `<span class="fx-badge ${eligible ? 'badge-amber' : 'badge-grey'}">${eligible ? 'Ready to Issue' : 'Not Eligible'}</span>`}</td>
+        <td>
+          ${t.certificate.available
+            ? `<button class="btn-fx-outline" style="padding:.35rem .7rem;font-size:.8rem;" onclick="fxToast('Opening certificate preview…','success')">View</button>`
+            : `<button class="btn-fx-orange" style="padding:.35rem .7rem;font-size:.8rem;" ${eligible ? '' : 'disabled style="opacity:.5;"'} onclick="fxIssue('${t.traineeId}')">Upload Certificate</button>`}
+        </td>
+      </tr>`;
+    }).join('');
+  }
+  function fxIssue(id) {
+    const t = FxData.trainee(id);
+    const certId = 'FA-CERT-' + id.split('-').pop();
+    FxData.updateTrainee(id, { certificate: { available: true, file: 'certificate.pdf', certificateId: certId } });
+    fxToast('Certificate issued to ' + t.firstName + '.', 'success');
+    render();
+  }
+  render();
+</script>
+</body>
+</html>

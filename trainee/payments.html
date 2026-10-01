@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Payment — Fhenix Africa</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="fx-app">
+  <aside class="fx-sidebar" id="fxSidebar"></aside>
+  <div class="fx-overlay" id="fxOverlay"></div>
+  <div class="fx-main">
+    <div class="fx-topbar">
+      <div class="d-flex gap-12" style="align-items:center;">
+        <button class="fx-burger" id="fxBurger"><i class="bi bi-list"></i></button>
+        <span class="page-title" id="fxPageTitle"></span>
+      </div>
+    </div>
+    <div class="fx-content">
+      <div class="fx-card">
+        <div class="flex-between" style="margin-bottom:18px;flex-wrap:wrap;gap:10px;">
+          <h3 class="mt-0 mb-0">Training Fee Summary</h3>
+          <span id="fxPayStatusBadge"></span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:18px;">
+          <div><div class="text-muted-fx" style="font-size:.82rem;">Training Fee</div><div style="font-weight:700;color:var(--fx-navy);font-size:1.2rem;" id="fxTotalFee"></div></div>
+          <div><div class="text-muted-fx" style="font-size:.82rem;">Amount Paid</div><div style="font-weight:700;color:var(--fx-green);font-size:1.2rem;" id="fxAmountPaid"></div></div>
+          <div><div class="text-muted-fx" style="font-size:.82rem;">Balance</div><div style="font-weight:700;color:var(--fx-navy);font-size:1.2rem;" id="fxBalance"></div></div>
+          <div><div class="text-muted-fx" style="font-size:.82rem;">Payment Method</div><div style="font-weight:700;color:var(--fx-navy);font-size:1.2rem;">Bank Transfer</div></div>
+        </div>
+      </div>
+
+      <div class="fx-card" style="margin-top:20px;" id="fxNextPaymentCard"></div>
+
+      <div class="fx-card" style="margin-top:20px;">
+        <div class="flex-between">
+          <h3 class="mt-0">Need to make a payment?</h3>
+          <a href="receipts.html" class="btn-fx-orange">Upload Payment Receipt</a>
+        </div>
+        <p class="mb-0">After you pay via bank transfer or card, upload your receipt so our finance team can verify it and update your balance.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  FxAuth.guardTrainee();
+  fxRenderShell({ role: 'trainee', active: 'payments.html', title: 'Payment' });
+  const t = FxAuth.currentTrainee();
+  const p = t.payment;
+
+  document.getElementById('fxPayStatusBadge').innerHTML = `<span class="fx-badge ${fxPaymentBadgeClass(p.status)}">${p.status}</span>`;
+  document.getElementById('fxTotalFee').textContent = fxCurrency(p.totalFee);
+  document.getElementById('fxAmountPaid').textContent = fxCurrency(p.amountPaid);
+  document.getElementById('fxBalance').textContent = fxCurrency(p.balance);
+
+  const nextCard = document.getElementById('fxNextPaymentCard');
+  if (p.status === 'Fully Paid') {
+    nextCard.innerHTML = `<div class="d-flex gap-12" style="align-items:center;"><div class="icon icon-green" style="width:44px;height:44px;"><i class="bi bi-check-circle-fill"></i></div>
+      <div><h4 class="mt-0 mb-0">Paid in Full</h4><p class="mb-0">You have no outstanding balance for this training track.</p></div></div>`;
+  } else {
+    nextCard.innerHTML = `<div class="d-flex gap-12" style="align-items:center;"><div class="icon icon-orange" style="width:44px;height:44px;"><i class="bi bi-alarm"></i></div>
+      <div><h4 class="mt-0 mb-0">Next Payment: ${fxCurrency(p.nextPayment)}</h4><p class="mb-0">Due on ${fxDate(p.nextPaymentDate)}.</p></div></div>`;
+  }
+</script>
+</body>
+</html>

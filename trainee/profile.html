@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Profile — Fhenix Africa</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="fx-app">
+  <aside class="fx-sidebar" id="fxSidebar"></aside>
+  <div class="fx-overlay" id="fxOverlay"></div>
+  <div class="fx-main">
+    <div class="fx-topbar">
+      <div class="d-flex gap-12" style="align-items:center;">
+        <button class="fx-burger" id="fxBurger"><i class="bi bi-list"></i></button>
+        <span class="page-title" id="fxPageTitle"></span>
+      </div>
+    </div>
+    <div class="fx-content">
+      <div class="fx-card" style="margin-bottom:22px;">
+        <h3 class="mt-0">Profile Information</h3>
+        <form id="fxProfileForm" novalidate>
+          <div class="fx-form-grid">
+            <div class="form-group"><label class="form-label">First Name</label><input class="form-control" name="firstName" required></div>
+            <div class="form-group"><label class="form-label">Last Name</label><input class="form-control" name="lastName" required></div>
+            <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-control" name="email" required></div>
+            <div class="form-group"><label class="form-label">Phone Number</label><input class="form-control" name="phone" required></div>
+            <div class="form-group"><label class="form-label">Date of Birth</label><input type="date" class="form-control" name="dob"></div>
+            <div class="form-group"><label class="form-label">Gender</label>
+              <select class="form-control" name="gender"><option>Female</option><option>Male</option><option>Prefer not to say</option></select>
+            </div>
+            <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Address</label><input class="form-control" name="address"></div>
+          </div>
+          <fieldset class="fx-fieldset">
+            <legend>Parent / Guardian Information</legend>
+            <div class="fx-form-grid">
+              <div class="form-group"><label class="form-label">Guardian Name</label><input class="form-control" name="guardianName"></div>
+              <div class="form-group"><label class="form-label">Guardian Phone</label><input class="form-control" name="guardianPhone"></div>
+              <div class="form-group"><label class="form-label">Guardian Email</label><input class="form-control" name="guardianEmail"></div>
+              <div class="form-group"><label class="form-label">Relationship</label><input class="form-control" name="guardianRelationship"></div>
+              <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Guardian Address</label><input class="form-control" name="guardianAddress"></div>
+            </div>
+          </fieldset>
+          <button type="submit" class="btn-fx-primary">Save Changes</button>
+        </form>
+      </div>
+
+      <div class="fx-card" id="security">
+        <h3 class="mt-0">Change Password</h3>
+        <form id="fxPasswordForm" novalidate>
+          <div class="fx-form-grid">
+            <div class="form-group"><label class="form-label">Current Password</label><input type="password" class="form-control" name="current" required></div>
+            <div></div>
+            <div class="form-group"><label class="form-label">New Password</label><input type="password" class="form-control" name="newPassword" minlength="6" required></div>
+            <div class="form-group"><label class="form-label">Confirm New Password</label><input type="password" class="form-control" name="confirmPassword" minlength="6" required></div>
+          </div>
+          <button type="submit" class="btn-fx-orange">Update Password</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  FxAuth.guardTrainee();
+  fxRenderShell({ role: 'trainee', active: 'profile.html', title: 'Profile' });
+  let t = FxAuth.currentTrainee();
+
+  const pf = document.getElementById('fxProfileForm');
+  function fill() {
+    t = FxAuth.currentTrainee();
+    pf.firstName.value = t.firstName; pf.lastName.value = t.lastName; pf.email.value = t.email;
+    pf.phone.value = t.phone; pf.dob.value = t.dob || ''; pf.gender.value = t.gender || 'Female'; pf.address.value = t.address || '';
+    pf.guardianName.value = t.guardian.name || ''; pf.guardianPhone.value = t.guardian.phone || '';
+    pf.guardianEmail.value = t.guardian.email || ''; pf.guardianRelationship.value = t.guardian.relationship || '';
+    pf.guardianAddress.value = t.guardian.address || '';
+  }
+  fill();
+
+  pf.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!fxValidateRequired(pf)) { fxToast('Please fill in the required fields.', 'error'); return; }
+    const data = Object.fromEntries(new FormData(pf).entries());
+    FxData.updateTrainee(t.traineeId, {
+      firstName: data.firstName, lastName: data.lastName, email: data.email, phone: data.phone,
+      dob: data.dob, gender: data.gender, address: data.address,
+      guardian: { name: data.guardianName, phone: data.guardianPhone, email: data.guardianEmail, address: data.guardianAddress, relationship: data.guardianRelationship }
+    });
+    fxToast('Profile updated successfully.', 'success');
+    fill();
+  });
+
+  document.getElementById('fxPasswordForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const form = e.target;
+    if (!fxValidateRequired(form)) { fxToast('Please fill in all password fields.', 'error'); return; }
+    const data = Object.fromEntries(new FormData(form).entries());
+    if (data.current !== t.password) { fxToast('Current password is incorrect.', 'error'); return; }
+    if (data.newPassword !== data.confirmPassword) { fxToast('New passwords do not match.', 'error'); return; }
+    FxData.updateTrainee(t.traineeId, { password: data.newPassword });
+    fxToast('Password updated successfully.', 'success');
+    form.reset();
+  });
+</script>
+</body>
+</html>

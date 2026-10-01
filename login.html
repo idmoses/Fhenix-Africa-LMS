@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign In — Fhenix Africa</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div class="fx-auth-wrap">
+  <div class="fx-auth-side">
+    <a href="index.html" class="fx-logo" style="color:#fff;"><span class="mark">FA</span> Fhenix Africa</a>
+    <h2 style="margin-top:30px;">Continue your learning journey</h2>
+    <p style="color:#DCE7F2;">Sign in to see your lessons, track your progress and manage your payments.</p>
+    <ul>
+      <li><i class="bi bi-check-circle"></i> Personalized lessons for your track</li>
+      <li><i class="bi bi-check-circle"></i> Real-time progress tracking</li>
+      <li><i class="bi bi-check-circle"></i> Upload receipts and view certificates</li>
+    </ul>
+  </div>
+  <div class="fx-auth-form">
+    <div class="fx-auth-box">
+      <h1>Trainee Sign In</h1>
+      <p class="text-muted-fx">Welcome back — enter your details to continue.</p>
+      <div id="fxLoginMsg"></div>
+      <form id="fxLoginForm" novalidate>
+        <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-control" name="email" required></div>
+        <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-control" name="password" required></div>
+        <button type="submit" class="btn-fx-primary" style="width:100%;padding:.75rem;margin-top:6px;">Sign In</button>
+        <div class="flex-between" style="margin-top:16px;">
+          <a href="#" id="fxForgotLink">Forgot Password?</a>
+          <a href="register.html">Create Training Account</a>
+        </div>
+      </form>
+      <p class="form-hint" style="margin-top:24px;">Demo account: amaka@example.com / password1</p>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+  document.getElementById('fxLoginForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const form = e.target;
+    if (!fxValidateRequired(form)) { fxToast('Please enter your email and password.', 'error'); return; }
+    const data = Object.fromEntries(new FormData(form).entries());
+    const result = FxAuth.loginTrainee(data.email, data.password);
+    if (!result.ok) { fxToast(result.error, 'error'); return; }
+    window.location.href = 'trainee/dashboard.html';
+  });
+  document.getElementById('fxForgotLink').addEventListener('click', function (e) {
+    e.preventDefault();
+    fxToast('Password reset instructions would be emailed to you in the live system.', 'warn');
+  });
+</script>
+</body>
+</html>

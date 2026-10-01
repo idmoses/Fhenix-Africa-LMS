@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Training — Fhenix Africa</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="fx-app">
+  <aside class="fx-sidebar" id="fxSidebar"></aside>
+  <div class="fx-overlay" id="fxOverlay"></div>
+  <div class="fx-main">
+    <div class="fx-topbar">
+      <div class="d-flex gap-12" style="align-items:center;">
+        <button class="fx-burger" id="fxBurger"><i class="bi bi-list"></i></button>
+        <span class="page-title" id="fxPageTitle"></span>
+      </div>
+    </div>
+    <div class="fx-content" id="progress">
+      <div class="fx-card" style="margin-bottom:22px;">
+        <h3 class="mt-0" id="fxTrackHeading"></h3>
+        <div class="fx-progress" style="margin:10px 0 6px;"><span id="fxProgressBar"></span></div>
+        <p class="text-muted-fx mb-0" id="fxProgressText"></p>
+      </div>
+      <div class="fx-card">
+        <h3 class="mt-0">Modules</h3>
+        <div id="fxModuleList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  FxAuth.guardTrainee();
+  fxRenderShell({ role: 'trainee', active: 'training.html', title: 'My Training' });
+  const t = FxAuth.currentTrainee();
+  const track = FxData.track(t.track);
+  const lessons = FxData.lessonsForTrack(t.track);
+
+  document.getElementById('fxTrackHeading').textContent = track ? track.name : t.track;
+  document.getElementById('fxProgressBar').style.width = t.progress.percentage + '%';
+  document.getElementById('fxProgressText').textContent = `${t.progress.completedLessons} of ${t.progress.totalLessons} lessons completed — ${t.progress.percentage}%`;
+
+  // Group lessons by module, derive a status per module from completion of its lessons
+  const modules = {};
+  lessons.forEach(l => { (modules[l.module] = modules[l.module] || []).push(l); });
+  const moduleNames = Object.keys(modules);
+
+  function statusFor(moduleLessons, idx) {
+    const done = moduleLessons.every(l => t.progress.completedLessonIds.includes(l.id));
+    const started = moduleLessons.some(l => t.progress.completedLessonIds.includes(l.id));
+    if (done) return 'Completed';
+    if (started) return 'In Progress';
+    // locked if a previous module isn't done yet
+    if (idx === 0) return 'In Progress';
+    const prevDone = modules[moduleNames[idx - 1]].every(l => t.progress.completedLessonIds.includes(l.id));
+    return prevDone ? 'Upcoming' : 'Locked';
+  }
+  const badgeMap = { Completed: 'badge-green', 'In Progress': 'badge-blue', Upcoming: 'badge-amber', Locked: 'badge-grey' };
+  const iconMap = { Completed: 'bi-check-circle-fill', 'In Progress': 'bi-play-circle', Upcoming: 'bi-hourglass-split', Locked: 'bi-lock-fill' };
+
+  document.getElementById('fxModuleList').innerHTML = moduleNames.map((name, i) => {
+    const status = statusFor(modules[name], i);
+    return `<div class="fx-module-row">
+      <div><div style="font-weight:600;color:var(--fx-navy);">${name}</div>
+      <div class="text-muted-fx" style="font-size:.85rem;">${modules[name].length} lesson${modules[name].length > 1 ? 's' : ''}</div></div>
+      <span class="fx-badge ${badgeMap[status]}"><i class="bi ${iconMap[status]}"></i> ${status}</span>
+    </div>`;
+  }).join('');
+</script>
+</body>
+</html>

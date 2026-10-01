@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Progress — Fhenix Africa Admin</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="fx-app">
+  <aside class="fx-sidebar" id="fxSidebar"></aside>
+  <div class="fx-overlay" id="fxOverlay"></div>
+  <div class="fx-main">
+    <div class="fx-topbar">
+      <div class="d-flex gap-12" style="align-items:center;">
+        <button class="fx-burger" id="fxBurger"><i class="bi bi-list"></i></button>
+        <span class="page-title" id="fxPageTitle"></span>
+      </div>
+    </div>
+    <div class="fx-content">
+      <div class="fx-table-wrap">
+        <table class="fx-table">
+          <thead><tr><th>Trainee</th><th>Track</th><th>Completed Lessons</th><th>Progress</th><th>Status</th></tr></thead>
+          <tbody id="fxProgressRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  FxAuth.guardAdmin();
+  fxRenderShell({ role: 'admin', active: 'progress.html', title: 'Progress' });
+
+  const trainees = FxData.trainees().slice().sort((a, b) => b.progress.percentage - a.progress.percentage);
+  document.getElementById('fxProgressRows').innerHTML = trainees.map(t => {
+    const track = FxData.track(t.track);
+    const status = t.progress.percentage === 100 ? 'Completed' : (t.progress.percentage === 0 ? 'Not Started' : 'In Progress');
+    const badge = { Completed: 'badge-green', 'In Progress': 'badge-blue', 'Not Started': 'badge-grey' }[status];
+    return `<tr>
+      <td><a href="trainee-view.html?id=${t.traineeId}">${t.firstName} ${t.lastName}</a><div class="text-muted-fx" style="font-size:.78rem;">${t.traineeId}</div></td>
+      <td>${track ? track.name : t.track}</td>
+      <td>${t.progress.completedLessons} / ${t.progress.totalLessons} Lessons</td>
+      <td style="min-width:150px;"><div class="fx-progress"><span style="width:${t.progress.percentage}%"></span></div><div class="text-muted-fx" style="font-size:.76rem;margin-top:4px;">${t.progress.percentage}%</div></td>
+      <td><span class="fx-badge ${badge}">${status}</span></td>
+    </tr>`;
+  }).join('');
+</script>
+</body>
+</html>

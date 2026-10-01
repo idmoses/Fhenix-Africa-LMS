@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class Content — Fhenix Africa Admin</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="fx-app">
+  <aside class="fx-sidebar" id="fxSidebar"></aside>
+  <div class="fx-overlay" id="fxOverlay"></div>
+  <div class="fx-main">
+    <div class="fx-topbar">
+      <div class="d-flex gap-12" style="align-items:center;">
+        <button class="fx-burger" id="fxBurger"><i class="bi bi-list"></i></button>
+        <span class="page-title" id="fxPageTitle"></span>
+      </div>
+    </div>
+    <div class="fx-content">
+      <div class="fx-table-wrap">
+        <div class="fx-table-toolbar">
+          <div class="filters"><select class="form-control" id="fxTrackFilter"></select></div>
+          <button class="btn-fx-orange" onclick="fxOpenAdd()"><i class="bi bi-plus-lg"></i> Add Lesson</button>
+        </div>
+        <table class="fx-table">
+          <thead><tr><th>Order</th><th>Module</th><th>Lesson</th><th>Duration</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="fxLessonRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="fx-modal-backdrop" id="fxLessonModal">
+  <div class="fx-modal">
+    <div class="fx-modal-head"><strong id="fxLessonModalTitle">Add Lesson</strong><button class="fx-modal-close" onclick="fxCloseModal('fxLessonModal')">&times;</button></div>
+    <div class="fx-modal-body">
+      <form id="fxLessonForm" novalidate>
+        <input type="hidden" name="id">
+        <div class="form-group"><label class="form-label">Track</label><select class="form-control" name="trackId" id="fxLessonTrackSelect" required></select></div>
+        <div class="form-group"><label class="form-label">Module</label><input class="form-control" name="module" placeholder="e.g. Module 1: Foundations" required></div>
+        <div class="form-group"><label class="form-label">Lesson Title</label><input class="form-control" name="title" required></div>
+        <div class="form-group"><label class="form-label">Lesson Description</label><textarea class="form-control" name="desc" rows="2" required></textarea></div>
+        <div class="fx-form-grid">
+          <div class="form-group"><label class="form-label">Video URL</label><input class="form-control" name="videoUrl" placeholder="https://..." required></div>
+          <div class="form-group"><label class="form-label">Duration</label><input class="form-control" name="duration" placeholder="mm:ss" required></div>
+        </div>
+        <div class="form-group"><label class="form-label">Lesson Order</label><input type="number" class="form-control" name="order" min="1" required></div>
+        <button type="submit" class="btn-fx-orange" style="width:100%;padding:.7rem;">Save Lesson</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  FxAuth.guardAdmin();
+  fxRenderShell({ role: 'admin', active: 'lessons.html', title: 'Class Content' });
+
+  const tracks = FxData.tracks();
+  const trackFilter = document.getElementById('fxTrackFilter');
+  const trackSelect = document.getElementById('fxLessonTrackSelect');
+  const opts = tracks.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+  trackFilter.innerHTML = '<option value="">All Tracks</option>' + opts;
+  trackSelect.innerHTML = opts;
+
+  function render() {
+    const filterVal = trackFilter.value;
+    let lessons = FxData.lessons();
+    if (filterVal) lessons = lessons.filter(l => l.trackId === filterVal);
+    lessons = lessons.slice().sort((a, b) => a.trackId.localeCompare(b.trackId) || a.order - b.order);
+
+    document.getElementById('fxLessonRows').innerHTML = lessons.length ? lessons.map(l => `
+      <tr>
+        <td>${l.order}</td><td>${l.module}</td>
+        <td><div style="font-weight:600;color:var(--fx-navy);">${l.title}</div><div class="text-muted-fx" style="font-size:.78rem;">${FxData.track(l.trackId) ? FxData.track(l.trackId).name : l.trackId}</div></td>
+        <td>${l.duration}</td>
+        <td><span class="fx-badge ${l.published ? 'badge-green' : 'badge-grey'}">${l.published ? 'Published' : 'Unpublished'}</span></td>
+        <td>
+          <button class="btn-fx-outline" style="padding:.35rem .7rem;font-size:.8rem;" onclick='fxEdit(${JSON.stringify(l)})'>Edit</button>
+          <button class="btn-fx-ghost" style="padding:.35rem .5rem;font-size:.8rem;" onclick="fxTogglePublish('${l.id}')">${l.published ? 'Unpublish' : 'Publish'}</button>
+          <button class="btn-fx-ghost" style="padding:.35rem .5rem;font-size:.8rem;" onclick="fxDelete('${l.id}')">Delete</button>
+        </td>
+      </tr>`).join('') : `<tr><td colspan="6"><div class="fx-empty"><div class="icon"><i class="bi bi-collection-play"></i></div>No lessons for this track yet.</div></td></tr>`;
+  }
+
+  function fxOpenAdd() {
+    document.getElementById('fxLessonModalTitle').textContent = 'Add Lesson';
+    document.getElementById('fxLessonForm').reset();
+    document.getElementById('fxLessonForm').id.value = '';
+    fxOpenModal('fxLessonModal');
+  }
+  function fxEdit(l) {
+    document.getElementById('fxLessonModalTitle').textContent = 'Edit Lesson';
+    const form = document.getElementById('fxLessonForm');
+    form.id.value = l.id; form.trackId.value = l.trackId; form.module.value = l.module;
+    form.title.value = l.title; form.desc.value = l.desc; form.videoUrl.value = l.videoUrl;
+    form.duration.value = l.duration; form.order.value = l.order;
+    fxOpenModal('fxLessonModal');
+  }
+  function fxTogglePublish(id) {
+    const lessons = FxData.lessons();
+    const l = lessons.find(x => x.id === id);
+    l.published = !l.published;
+    fxSet(FX_KEYS.LESSONS, lessons);
+    render();
+  }
+  function fxDelete(id) {
+    const lessons = FxData.lessons().filter(x => x.id !== id);
+    fxSet(FX_KEYS.LESSONS, lessons);
+    fxToast('Lesson deleted.', 'warn');
+    render();
+  }
+
+  document.getElementById('fxLessonForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!fxValidateRequired(this)) { fxToast('Please fill in all required fields.', 'error'); return; }
+    const data = Object.fromEntries(new FormData(this).entries());
+    let lessons = FxData.lessons();
+    if (data.id) {
+      lessons = lessons.map(l => l.id === data.id ? { ...l, trackId: data.trackId, module: data.module, title: data.title, desc: data.desc, videoUrl: data.videoUrl, duration: data.duration, order: Number(data.order) } : l);
+      fxToast('Lesson updated.', 'success');
+    } else {
+      const id = 'L' + Date.now().toString().slice(-6);
+      lessons.push({ id, trackId: data.trackId, module: data.module, title: data.title, desc: data.desc, videoUrl: data.videoUrl, duration: data.duration, order: Number(data.order), thumb: '', published: true });
+      fxToast('Lesson added.', 'success');
+    }
+    fxSet(FX_KEYS.LESSONS, lessons);
+    fxCloseModal('fxLessonModal');
+    render();
+  });
+
+  trackFilter.addEventListener('change', render);
+  render();
+</script>
+</body>
+</html>

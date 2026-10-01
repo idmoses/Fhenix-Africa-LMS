@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Payments — Fhenix Africa Admin</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="fx-app">
+  <aside class="fx-sidebar" id="fxSidebar"></aside>
+  <div class="fx-overlay" id="fxOverlay"></div>
+  <div class="fx-main">
+    <div class="fx-topbar">
+      <div class="d-flex gap-12" style="align-items:center;">
+        <button class="fx-burger" id="fxBurger"><i class="bi bi-list"></i></button>
+        <span class="page-title" id="fxPageTitle"></span>
+      </div>
+    </div>
+    <div class="fx-content">
+      <div class="fx-table-wrap">
+        <div class="fx-table-toolbar">
+          <strong>All Trainee Payments</strong>
+          <div class="filters"><select class="form-control" id="fxPayFilter"><option value="">All Status</option><option>Fully Paid</option><option>Partially Paid</option><option>Payment Due</option><option>Overdue</option></select></div>
+        </div>
+        <table class="fx-table">
+          <thead><tr><th>Trainee</th><th>Track</th><th>Fee</th><th>Paid</th><th>Balance</th><th>Next Payment</th><th>Status</th></tr></thead>
+          <tbody id="fxPayRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  FxAuth.guardAdmin();
+  fxRenderShell({ role: 'admin', active: 'payments.html', title: 'Payments' });
+
+  function render() {
+    const filter = document.getElementById('fxPayFilter').value;
+    let list = FxData.trainees();
+    if (filter) list = list.filter(t => t.payment.status === filter);
+    document.getElementById('fxPayRows').innerHTML = list.map(t => {
+      const track = FxData.track(t.track);
+      return `<tr>
+        <td><a href="trainee-view.html?id=${t.traineeId}">${t.firstName} ${t.lastName}</a></td>
+        <td>${track ? track.name : t.track}</td>
+        <td>${fxCurrency(t.payment.totalFee)}</td>
+        <td>${fxCurrency(t.payment.amountPaid)}</td>
+        <td>${fxCurrency(t.payment.balance)}</td>
+        <td>${t.payment.status === 'Fully Paid' ? '\u2014' : fxCurrency(t.payment.nextPayment) + ' · ' + fxDate(t.payment.nextPaymentDate)}</td>
+        <td><span class="fx-badge ${fxPaymentBadgeClass(t.payment.status)}">${t.payment.status}</span></td>
+      </tr>`;
+    }).join('');
+  }
+  document.getElementById('fxPayFilter').addEventListener('change', render);
+  render();
+</script>
+</body>
+</html>

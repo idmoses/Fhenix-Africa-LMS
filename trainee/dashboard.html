@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard — Fhenix Africa</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="fx-app">
+  <aside class="fx-sidebar" id="fxSidebar"></aside>
+  <div class="fx-overlay" id="fxOverlay"></div>
+  <div class="fx-main">
+    <div class="fx-topbar">
+      <div class="d-flex gap-12" style="align-items:center;">
+        <button class="fx-burger" id="fxBurger"><i class="bi bi-list"></i></button>
+        <span class="page-title" id="fxPageTitle"></span>
+      </div>
+    </div>
+    <div class="fx-content">
+      <h2 id="fxWelcome" style="margin-bottom:2px;"></h2>
+      <p class="text-muted-fx" id="fxWelcomeSub">Continue your learning journey and keep building your skills.</p>
+
+      <div class="fx-summary-grid" id="fxSummaryGrid"></div>
+
+      <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:22px;" id="fxDashGrid">
+        <div class="fx-card">
+          <div class="flex-between" style="margin-bottom:14px;">
+            <h3 class="mt-0">Your Training Progress</h3>
+            <a href="training.html" class="btn-fx-outline">View Modules</a>
+          </div>
+          <p class="mb-0" id="fxTrackName" style="font-weight:600;color:var(--fx-navy);"></p>
+          <div class="fx-progress" style="margin:10px 0 6px;"><span id="fxProgressBar"></span></div>
+          <p class="text-muted-fx mb-0" id="fxProgressText"></p>
+        </div>
+        <div class="fx-card">
+          <h3 class="mt-0">Announcements</h3>
+          <div id="fxAnnouncements"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  FxAuth.guardTrainee();
+  fxRenderShell({ role: 'trainee', active: 'dashboard.html', title: 'Dashboard' });
+  const t = FxAuth.currentTrainee();
+  const track = FxData.track(t.track);
+
+  document.getElementById('fxWelcome').textContent = `Welcome back, ${t.firstName}!`;
+  document.getElementById('fxTrackName').textContent = track ? track.name : t.track;
+  document.getElementById('fxProgressBar').style.width = t.progress.percentage + '%';
+  document.getElementById('fxProgressText').textContent = `${t.progress.completedLessons} of ${t.progress.totalLessons} lessons completed — ${t.progress.percentage}%`;
+
+  const p = t.payment;
+  document.getElementById('fxSummaryGrid').innerHTML = `
+    <div class="fx-summary-card"><div class="icon icon-blue"><i class="bi bi-cash-stack"></i></div><div class="lbl">Total Amount Paid</div><div class="val">${fxCurrency(p.amountPaid)}</div></div>
+    <div class="fx-summary-card"><div class="icon icon-orange"><i class="bi bi-graph-up-arrow"></i></div><div class="lbl">Training Completion</div><div class="val">${t.progress.percentage}%</div><div class="fx-progress" style="margin-top:8px;"><span style="width:${t.progress.percentage}%"></span></div></div>
+    <div class="fx-summary-card"><div class="icon icon-green"><i class="bi bi-calendar-check"></i></div><div class="lbl">Training Ends</div><div class="val" style="font-size:1.15rem;">${fxDate(t.endDate)}</div></div>
+    <div class="fx-summary-card"><div class="icon icon-red"><i class="bi bi-wallet2"></i></div><div class="lbl">${p.status === 'Fully Paid' ? 'Payment Status' : 'Next Payment'}</div><div class="val" style="font-size:${p.status === 'Fully Paid' ? '1.1rem' : '1.6rem'};">${p.status === 'Fully Paid' ? 'Paid in Full' : fxCurrency(p.nextPayment)}</div></div>`;
+
+  const ann = FxData.announcements();
+  document.getElementById('fxAnnouncements').innerHTML = ann.length ? ann.map(a => `
+    <div style="padding:12px 0;border-bottom:1px solid var(--fx-line);">
+      <div style="font-weight:600;color:var(--fx-navy);">${a.title}</div>
+      <div class="text-muted-fx" style="font-size:.88rem;">${a.message}</div>
+      <div class="text-muted-fx" style="font-size:.76rem;margin-top:4px;">${fxDate(a.date)}</div>
+    </div>`).join('') : `<div class="fx-empty"><div class="icon"><i class="bi bi-bell"></i></div>You're all caught up.</div>`;
+</script>
+</body>
+</html>

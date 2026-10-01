@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reports — Fhenix Africa Admin</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<div class="fx-app">
+  <aside class="fx-sidebar" id="fxSidebar"></aside>
+  <div class="fx-overlay" id="fxOverlay"></div>
+  <div class="fx-main">
+    <div class="fx-topbar">
+      <div class="d-flex gap-12" style="align-items:center;">
+        <button class="fx-burger" id="fxBurger"><i class="bi bi-list"></i></button>
+        <span class="page-title" id="fxPageTitle"></span>
+      </div>
+    </div>
+    <div class="fx-content">
+      <div class="fx-summary-grid" id="fxReportSummary"></div>
+      <div class="fx-card">
+        <h3 class="mt-0">Trainees by Track</h3>
+        <div id="fxByTrack"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  FxAuth.guardAdmin();
+  fxRenderShell({ role: 'admin', active: 'reports.html', title: 'Reports' });
+
+  const trainees = FxData.trainees();
+  const receipts = FxData.receipts();
+  const totalPaid = trainees.reduce((s, t) => s + t.payment.amountPaid, 0);
+  const outstanding = trainees.reduce((s, t) => s + t.payment.balance, 0);
+  const completed = trainees.filter(t => t.status === 'Completed').length;
+  const active = trainees.filter(t => t.status === 'Active').length;
+  const pendingReceipts = receipts.filter(r => r.status === 'Pending').length;
+  const certsIssued = trainees.filter(t => t.certificate.available).length;
+
+  document.getElementById('fxReportSummary').innerHTML = `
+    <div class="fx-summary-card"><div class="icon icon-blue"><i class="bi bi-people"></i></div><div class="lbl">Total Trainees</div><div class="val">${trainees.length}</div></div>
+    <div class="fx-summary-card"><div class="icon icon-green"><i class="bi bi-cash-stack"></i></div><div class="lbl">Total Payments Received</div><div class="val" style="font-size:1.25rem;">${fxCurrency(totalPaid)}</div></div>
+    <div class="fx-summary-card"><div class="icon icon-red"><i class="bi bi-exclamation-circle"></i></div><div class="lbl">Outstanding Balances</div><div class="val" style="font-size:1.25rem;">${fxCurrency(outstanding)}</div></div>
+    <div class="fx-summary-card"><div class="icon icon-orange"><i class="bi bi-patch-check"></i></div><div class="lbl">Certificates Issued</div><div class="val">${certsIssued}</div></div>
+    <div class="fx-summary-card"><div class="icon icon-blue"><i class="bi bi-person-check"></i></div><div class="lbl">Active Trainees</div><div class="val">${active}</div></div>
+    <div class="fx-summary-card"><div class="icon icon-green"><i class="bi bi-mortarboard"></i></div><div class="lbl">Completed Training</div><div class="val">${completed}</div></div>
+    <div class="fx-summary-card"><div class="icon icon-amber" style="background:var(--fx-amber-light);color:var(--fx-amber);"><i class="bi bi-receipt"></i></div><div class="lbl">Pending Receipts</div><div class="val">${pendingReceipts}</div></div>`;
+
+  const byTrack = {};
+  trainees.forEach(t => { byTrack[t.track] = (byTrack[t.track] || 0) + 1; });
+  document.getElementById('fxByTrack').innerHTML = Object.entries(byTrack).map(([id, count]) => {
+    const track = FxData.track(id);
+    const pct = Math.round((count / trainees.length) * 100);
+    return `<div class="fx-module-row"><div style="flex:1;">
+      <div class="flex-between"><span style="font-weight:600;color:var(--fx-navy);">${track ? track.name : id}</span><span class="text-muted-fx">${count} trainee${count > 1 ? 's' : ''}</span></div>
+      <div class="fx-progress" style="margin-top:8px;"><span style="width:${pct}%"></span></div>
+    </div></div>`;
+  }).join('');
+</script>
+</body>
+</html>
