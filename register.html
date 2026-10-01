@@ -16,10 +16,12 @@
 </head>
 
 <body>
-
   <!-- Logo pulse (pops up when the form is submitted) -->
-  <div id="fxLoader" class="fx-loader" aria-hidden="true">
-    <img src="assets/img/F-Logo-removebg-preview.png" alt="" class="fx-loader-logo">
+  <div id="fxLoader"
+    class="fx-loader position-fixed top-0 start-0 w-100 d-flex align-items-center justify-content-center" role="status"
+    aria-live="polite" aria-hidden="true">
+    <img src="assets/img/F-Logo-removebg-preview.png" alt="" class="fx-loader-logo img-fluid">
+    <span class="visually-hidden">Loading...</span>
   </div>
 
   <!-- Navbar -->
