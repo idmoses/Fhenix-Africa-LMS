@@ -1243,9 +1243,6 @@ table.fx-table tr:hover td {
 
 /* Respect users who turn off motion */
 @media (prefers-reduced-motion: reduce) {
-  .fx-loader-logo {
-    animation: none;
-  }
 
   @keyframes fxPulse {
 
